@@ -109,8 +109,13 @@ def create_app(test_config=None):
 
         return jsonify(error="Could not generate a unique short code. Try again."), 503
 
+    @app.get("/api/urls")
     @app.get("/api/urls/<short_code>")
-    def get_short_url(short_code):
+    def get_short_url(short_code=None):
+        short_code = short_code or request.args.get("short_code")
+        if not short_code:
+            return jsonify(error="A short_code parameter is required."), 400
+
         mapping = URLMapping.query.filter_by(short_code=short_code).first()
         if mapping is None:
             return jsonify(error="Short URL not found."), 404

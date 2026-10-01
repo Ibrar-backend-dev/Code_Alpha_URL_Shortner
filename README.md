@@ -26,7 +26,7 @@ curl.exe -X POST http://127.0.0.1:5000/api/urls `
   -d '{"url":"https://example.com/page"}'
 ```
 
-The response includes `code`, `short_url`, the original `url`, and its UTC `created_at` timestamp. Look up a code as JSON with `GET /api/urls/<short_code>`; the code is a path parameter. Open the returned short URL itself to receive a `302` redirect. Invalid URLs return `400`; unknown codes return `404` from the lookup endpoint.
+The response includes `code`, `short_url`, the original `url`, and its UTC `created_at` timestamp. Look up a code as JSON with `GET /api/urls?short_code=<code>`; `short_code` is a query parameter. The path form `GET /api/urls/<code>` is also supported. Open the returned short URL itself to receive a `302` redirect. Invalid URLs return `400`; unknown codes return `404` from the lookup endpoint.
 
 Run tests with:
 

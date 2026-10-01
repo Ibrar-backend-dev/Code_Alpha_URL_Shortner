@@ -65,14 +65,16 @@ def test_short_code_redirects_and_unknown_code_returns_404(monkeypatch):
         db.drop_all()
 
 
-def test_short_code_lookup_returns_json_and_accepts_code_in_path(monkeypatch):
+def test_short_code_lookup_returns_json_for_path_and_query_parameter(monkeypatch):
     app = make_app()
     monkeypatch.setattr(url_shortener, "generate_short_code", lambda: "abc123")
 
     with app.test_client() as client:
         client.post("/api/urls", json={"url": "https://example.com/page"})
         response = client.get("/api/urls/abc123")
+        parameter_response = client.get("/api/urls?short_code=abc123")
         missing_response = client.get("/api/urls/unknown")
+        missing_parameter_response = client.get("/api/urls")
 
     assert response.status_code == 200
     assert response.is_json
@@ -80,7 +82,10 @@ def test_short_code_lookup_returns_json_and_accepts_code_in_path(monkeypatch):
     assert response.json["short_url"] == "https://sho.rt/abc123"
     assert response.json["url"] == "https://example.com/page"
     assert response.json["created_at"]
+    assert parameter_response.status_code == 200
+    assert parameter_response.json["code"] == "abc123"
     assert missing_response.status_code == 404
+    assert missing_parameter_response.status_code == 400
     with app.app_context():
         db.drop_all()
 
