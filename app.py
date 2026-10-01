@@ -1,12 +1,14 @@
 import os
 import secrets
 import string
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, redirect, request
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import inspect, text
 from sqlalchemy.exc import IntegrityError
 
 
@@ -19,11 +21,32 @@ class URLMapping(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     short_code = db.Column(db.String(16), unique=True, nullable=False, index=True)
     original_url = db.Column(db.Text, nullable=False)
+    created_at = db.Column(
+        db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
 
 
 def generate_short_code():
     alphabet = string.ascii_letters + string.digits
     return "".join(secrets.choice(alphabet) for _ in range(6))
+
+
+def upgrade_created_at_column():
+    columns = inspect(db.engine).get_columns(URLMapping.__tablename__)
+    if any(column["name"] == "created_at" for column in columns):
+        return
+
+    preparer = db.engine.dialect.identifier_preparer
+    table_name = preparer.quote(URLMapping.__tablename__)
+    column_name = preparer.quote("created_at")
+    column_type = db.DateTime(timezone=True).compile(dialect=db.engine.dialect)
+    with db.engine.begin() as connection:
+        connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"))
+        connection.execute(
+            URLMapping.__table__.update()
+            .where(URLMapping.created_at.is_(None))
+            .values(created_at=datetime.now(timezone.utc))
+        )
 
 
 def create_app(test_config=None):
@@ -41,6 +64,7 @@ def create_app(test_config=None):
 
     with app.app_context():
         db.create_all()
+        upgrade_created_at_column()
 
     @app.post("/api/urls")
     def create_short_url():
@@ -80,6 +104,7 @@ def create_app(test_config=None):
                 code=short_code,
                 short_url=f"{base_url}/{short_code}",
                 url=original_url,
+                created_at=mapping.created_at.isoformat(),
             ), 201
 
         return jsonify(error="Could not generate a unique short code. Try again."), 503

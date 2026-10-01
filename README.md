@@ -26,7 +26,7 @@ curl.exe -X POST http://127.0.0.1:5000/api/urls `
   -d '{"url":"https://example.com/page"}'
 ```
 
-The response includes `code`, `short_url`, and the original `url`. Open the returned short URL to receive a `302` redirect. Invalid URLs return `400`; unknown codes return `404`.
+The response includes `code`, `short_url`, the original `url`, and its UTC `created_at` timestamp. Open the returned short URL to receive a `302` redirect. Invalid URLs return `400`; unknown codes return `404`.
 
 Run tests with:
 

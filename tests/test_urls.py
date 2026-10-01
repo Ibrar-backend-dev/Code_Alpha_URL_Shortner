@@ -1,3 +1,6 @@
+import sqlite3
+from datetime import datetime, timezone
+
 import app as url_shortener
 from app import URLMapping, create_app, db
 
@@ -20,11 +23,13 @@ def test_create_url_returns_short_link_and_persists_mapping(monkeypatch):
         response = client.post("/api/urls", json={"url": "https://example.com/page"})
 
     assert response.status_code == 201
-    assert response.json == {
-        "code": "abc123",
-        "short_url": "https://sho.rt/abc123",
-        "url": "https://example.com/page",
-    }
+    assert response.json["code"] == "abc123"
+    assert response.json["short_url"] == "https://sho.rt/abc123"
+    assert response.json["url"] == "https://example.com/page"
+    created_at = datetime.fromisoformat(response.json["created_at"])
+    if created_at.tzinfo is None:
+        created_at = created_at.replace(tzinfo=timezone.utc)
+    assert abs((datetime.now(timezone.utc) - created_at).total_seconds()) < 5
     with app.app_context():
         mapping = URLMapping.query.filter_by(short_code="abc123").one()
         assert mapping.original_url == "https://example.com/page"
@@ -73,3 +78,28 @@ def test_code_collision_retries_with_another_code(monkeypatch):
     assert response.json["code"] == "fresh1"
     with app.app_context():
         db.drop_all()
+
+
+def test_create_app_adds_creation_time_to_an_existing_sqlite_database(tmp_path):
+    database_path = tmp_path / "legacy.db"
+    with sqlite3.connect(database_path) as connection:
+        connection.execute(
+            "CREATE TABLE url_mapping ("
+            "id INTEGER PRIMARY KEY, short_code VARCHAR(16) NOT NULL UNIQUE, "
+            "original_url TEXT NOT NULL)"
+        )
+        connection.execute(
+            "INSERT INTO url_mapping (short_code, original_url) VALUES (?, ?)",
+            ("old123", "https://example.com/old"),
+        )
+
+    app = create_app(
+        {
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": f"sqlite:///{database_path.as_posix()}",
+        }
+    )
+
+    with app.app_context():
+        mapping = URLMapping.query.filter_by(short_code="old123").one()
+        assert mapping.created_at is not None
