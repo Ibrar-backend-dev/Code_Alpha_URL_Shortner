@@ -65,6 +65,26 @@ def test_short_code_redirects_and_unknown_code_returns_404(monkeypatch):
         db.drop_all()
 
 
+def test_short_code_lookup_returns_json_and_accepts_code_in_path(monkeypatch):
+    app = make_app()
+    monkeypatch.setattr(url_shortener, "generate_short_code", lambda: "abc123")
+
+    with app.test_client() as client:
+        client.post("/api/urls", json={"url": "https://example.com/page"})
+        response = client.get("/api/urls/abc123")
+        missing_response = client.get("/api/urls/unknown")
+
+    assert response.status_code == 200
+    assert response.is_json
+    assert response.json["code"] == "abc123"
+    assert response.json["short_url"] == "https://sho.rt/abc123"
+    assert response.json["url"] == "https://example.com/page"
+    assert response.json["created_at"]
+    assert missing_response.status_code == 404
+    with app.app_context():
+        db.drop_all()
+
+
 def test_code_collision_retries_with_another_code(monkeypatch):
     app = make_app()
     generated_codes = iter(["taken1", "fresh1"])

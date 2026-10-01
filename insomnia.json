@@ -1,0 +1,168 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-10-01T00:00:00.000Z",
+  "__export_source": "insomnia.desktop.app",
+  "resources": [
+    {
+      "_id": "wrk_url_shortener",
+      "_type": "workspace",
+      "name": "URL Shortener API",
+      "description": "Requests for the local Flask URL shortener.",
+      "scope": "collection",
+      "created": 1790812800000,
+      "modified": 1790812800000
+    },
+    {
+      "_id": "env_url_shortener_base",
+      "_type": "environment",
+      "parentId": "wrk_url_shortener",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://127.0.0.1:5000",
+        "short_code": "replace-with-code-from-create-request"
+      },
+      "created": 1790812800000,
+      "modified": 1790812800000
+    },
+    {
+      "_id": "req_create_short_url",
+      "_type": "request",
+      "parentId": "wrk_url_shortener",
+      "name": "Create short URL (201)",
+      "description": "Creates a mapping. Copy the returned code into the short_code environment value before testing the redirect.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/urls",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"url\": \"https://example.com/page\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "created": 1790812800000,
+      "modified": 1790812800000,
+      "metaSortKey": -1790812800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "on"
+    },
+    {
+      "_id": "req_follow_short_url",
+      "_type": "request",
+      "parentId": "wrk_url_shortener",
+      "name": "Look up short code (200)",
+      "description": "Paste the code returned by the create request into the short_code environment value to view its URL and creation timestamp as JSON.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/urls/{{ _.short_code }}",
+      "body": {},
+      "headers": [],
+      "parameters": [],
+      "authentication": {},
+      "created": 1790812800000,
+      "modified": 1790812800000,
+      "metaSortKey": -1790812799000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "on"
+    },
+    {
+      "_id": "req_reject_invalid_url",
+      "_type": "request",
+      "parentId": "wrk_url_shortener",
+      "name": "Reject unsupported URL (400)",
+      "description": "The API only accepts HTTP and HTTPS URLs.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/urls",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"url\": \"ftp://example.com/file\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "created": 1790812800000,
+      "modified": 1790812800000,
+      "metaSortKey": -1790812798000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "on"
+    },
+    {
+      "_id": "req_reject_missing_url",
+      "_type": "request",
+      "parentId": "wrk_url_shortener",
+      "name": "Reject missing URL (400)",
+      "description": "A URL field is required in the JSON body.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/urls",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "created": 1790812800000,
+      "modified": 1790812800000,
+      "metaSortKey": -1790812797000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "on"
+    },
+    {
+      "_id": "req_unknown_short_code",
+      "_type": "request",
+      "parentId": "wrk_url_shortener",
+      "name": "Unknown short code (404)",
+      "description": "Checks the not-found response for a code that does not exist.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/not-a-real-code",
+      "body": {},
+      "headers": [],
+      "parameters": [],
+      "authentication": {},
+      "created": 1790812800000,
+      "modified": 1790812800000,
+      "metaSortKey": -1790812796000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "off"
+    }
+  ]
+}
